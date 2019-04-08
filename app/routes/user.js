@@ -67,9 +67,13 @@ module.exports.setRouter = (app) => {
 
     // auth token params: userId.
     app.post(`${baseUrl}/logout`,auth.isAuthorized, userController.logout);
-
+//------------------------------------------from here event routes starrt-------------------------------------------------------------------------------
     //to create event
     app.post(`${baseUrl}/event`,auth.isAuthorized, eventController.eventCreator);
 
     app.get(`${baseUrl}/:email/details`,auth.isAuthorized, eventController.getSingleUserEvents);
+
+    app.put(`${baseUrl}/:eventId/edit`, auth.isAuthorized, eventController.editEvent);
+
+    app.post(`${baseUrl}/:eventId/delete`, auth.isAuthorized, eventController.deleteEvent);
 }

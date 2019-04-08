@@ -35,6 +35,10 @@ let userSchema = new Schema({
   createdOn :{
     type:Date,
     default:""
+  },
+  typeOfUser :{
+    type:String,
+    default:"Normal"
   }
 
 
