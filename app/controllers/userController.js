@@ -137,12 +137,13 @@ let signUpFunction = (req, res) => {
                     } else if (check.isEmpty(retrievedUserDetails)) {
                         console.log(req.body)
                         let newUser = new UserModel({
+                            userName:req.body.email.toLowerCase(),
                             userId: shortid.generate(),
                             firstName: req.body.firstName,
                             lastName: req.body.lastName || '',
                             email: req.body.email.toLowerCase(),
                             mobileNumber: req.body.mobileNumber,
-                            password: passwordLib.hashpassword(req.body.password),
+                            password: passwordLib. hashpasswordUsingMd5(req.body.password),
                             createdOn: time.now()
                         })
                         newUser.save((err, newUser) => {
@@ -154,6 +155,7 @@ let signUpFunction = (req, res) => {
                             } else {
                                 let newUserObj = newUser.toObject();
                                 resolve(newUserObj)
+                                console.log(newUserObj+"*************************************")
                             }
                         })
                     } else {
@@ -185,10 +187,10 @@ let loginFunction = (req, res) => {
     let findUser = () => {
         console.log("findUser");
         return new Promise((resolve, reject) => {
-            if (req.body.email) {
+            if (req.body.userName) {
                 console.log("req body email is there");
                 console.log(req.body);
-                UserModel.findOne({ email: req.body.email}, (err, userDetails) => {
+                UserModel.findOne({ userName:req.body.userName}, (err, userDetails) => {
                     /* handle the error here if the User is not found */
                     if (err) {
                         console.log(err)
@@ -205,6 +207,7 @@ let loginFunction = (req, res) => {
                     } else {
                         /* prepare the message and the api response here */
                         logger.info('User Found', 'userController: findUser()', 10)
+                       //console.log(userDetails+"_____________++++++++++++_____________");
                         resolve(userDetails)
                     }
                 });
@@ -216,9 +219,13 @@ let loginFunction = (req, res) => {
         })
     }
     let validatePassword = (retrievedUserDetails) => {
-        console.log("validatePassword");
+        console.log("------validatePassword------");
+        console.log(retrievedUserDetails);
+
         return new Promise((resolve, reject) => {
-            passwordLib.comparePassword(req.body.password, retrievedUserDetails.password, (err, isMatch) => {
+
+            //done to
+            /*passwordLib.comparePassword(req.body.password, retrievedUserDetails.password, (err, isMatch) => {
                 if (err) {
                     console.log(err)
                     logger.error(err.message, 'userController: validatePassword()', 10)
@@ -237,7 +244,27 @@ let loginFunction = (req, res) => {
                     let apiResponse = response.generate(true, 'Wrong Password.Login Failed', 400, null)
                     reject(apiResponse)
                 }
-            })
+            })*/
+
+            let checkToken = passwordLib.comparePasswordGenerated(req.body.password, retrievedUserDetails.password);
+            if (checkToken === true)
+            {
+                let retrievedUserDetailsObj = retrievedUserDetails.toObject()
+                delete retrievedUserDetailsObj.password
+                delete retrievedUserDetailsObj._id
+                delete retrievedUserDetailsObj.__v
+                delete retrievedUserDetailsObj.createdOn
+                delete retrievedUserDetailsObj.modifiedOn
+                console.log("_______________________-----------------------------------------------------------------")
+                console.log(retrievedUserDetailsObj);
+                resolve(retrievedUserDetailsObj)
+            } else {
+
+                logger.info('Login Failed Due To Invalid Password', 'userController: validatePassword()', 10)
+                    let apiResponse = response.generate(true, 'Wrong Password.Login Failed', 400, null)
+                    reject(apiResponse)
+
+            }
         })
     }
 
