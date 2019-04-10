@@ -4,6 +4,7 @@ const userController = require("./../../app/controllers/userController");
 const eventController = require("./../../app/controllers/eventController")
 const appConfig = require("./../../config/appConfig")
 const auth = require('./../middlewares/auth')
+const checkAdmin = require('./../middlewares/checkAdmin')
 
 module.exports.setRouter = (app) => {
 
@@ -25,7 +26,7 @@ module.exports.setRouter = (app) => {
      *
      * @apiSuccess {object} myResponse shows error status, message, http status code, result.
      * 
-     * @apiSuccessExample {object} Success-Response:
+     * @apiSuccessExample {object} Successhe-Response:
          {
             "error": false,
             "message": "Login Successful",
@@ -67,13 +68,18 @@ module.exports.setRouter = (app) => {
 
     // auth token params: userId.
     app.post(`${baseUrl}/logout`,auth.isAuthorized, userController.logout);
+
+    //for forgot password
+    app.post(`${baseUrl}/forgot/password`, userController.forgotPassword);
+
+    app.post(`/reset/:token`,userController.resetPassword);
 //------------------------------------------from here event routes starrt-------------------------------------------------------------------------------
     //to create event
-    app.post(`${baseUrl}/event`,auth.isAuthorized, eventController.eventCreator);
+    app.post(`${baseUrl}/event`,auth.isAuthorized,checkAdmin.isAdmin, eventController.eventCreator);
 
-    app.get(`${baseUrl}/:email/details`,auth.isAuthorized, eventController.getSingleUserEvents);
+    app.get(`${baseUrl}/:email/details`,auth.isAuthorized, checkAdmin.isAdmin,eventController.getSingleUserEvents);
 
-    app.put(`${baseUrl}/:eventId/edit`, auth.isAuthorized, eventController.editEvent);
+    app.put(`${baseUrl}/:eventId/edit`, auth.isAuthorized,checkAdmin.isAdmin, eventController.editEvent);
 
-    app.post(`${baseUrl}/:eventId/delete`, auth.isAuthorized, eventController.deleteEvent);
+    app.post(`${baseUrl}/:eventId/delete`, auth.isAuthorized,checkAdmin.isAdmin, eventController.deleteEvent);
 }

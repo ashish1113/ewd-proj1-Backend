@@ -6,8 +6,10 @@ const response = require('./../libs/responseLib')
 const logger = require('./../libs/loggerLib');
 const validateInput = require('../libs/paramsValidationLib')
 const check = require('../libs/checkLib')
+const countryCode = require('../libs/checkCountryCodeLib')
 const token = require('../libs/tokenLib')
 const AuthModel = mongoose.model('Auth')
+const mailer = require("../libs/mailingLib")
 
 /* Models */
 const UserModel = mongoose.model('User')
@@ -137,13 +139,15 @@ let signUpFunction = (req, res) => {
                     } else if (check.isEmpty(retrievedUserDetails)) {
                         console.log(req.body)
                         let newUser = new UserModel({
-                            userName:req.body.email.toLowerCase(),
+                            userName: req.body.email.toLowerCase(),
                             userId: shortid.generate(),
                             firstName: req.body.firstName,
                             lastName: req.body.lastName || '',
                             email: req.body.email.toLowerCase(),
+                            country: req.body.country,
+                            countryCode: countryCode.findCountryCode(req.body.country.toLowerCase()),
                             mobileNumber: req.body.mobileNumber,
-                            password: passwordLib. hashpasswordUsingMd5(req.body.password),
+                            password: passwordLib.hashpasswordUsingMd5(req.body.password),
                             createdOn: time.now()
                         })
                         newUser.save((err, newUser) => {
@@ -155,7 +159,7 @@ let signUpFunction = (req, res) => {
                             } else {
                                 let newUserObj = newUser.toObject();
                                 resolve(newUserObj)
-                                console.log(newUserObj+"*************************************")
+                                console.log(newUserObj + "*************************************")
                             }
                         })
                     } else {
@@ -190,7 +194,7 @@ let loginFunction = (req, res) => {
             if (req.body.userName) {
                 console.log("req body email is there");
                 console.log(req.body);
-                UserModel.findOne({ userName:req.body.userName}, (err, userDetails) => {
+                UserModel.findOne({ userName: req.body.userName }, (err, userDetails) => {
                     /* handle the error here if the User is not found */
                     if (err) {
                         console.log(err)
@@ -207,11 +211,11 @@ let loginFunction = (req, res) => {
                     } else {
                         /* prepare the message and the api response here */
                         logger.info('User Found', 'userController: findUser()', 10)
-                       //console.log(userDetails+"_____________++++++++++++_____________");
+                        //console.log(userDetails+"_____________++++++++++++_____________");
                         resolve(userDetails)
                     }
                 });
-               
+
             } else {
                 let apiResponse = response.generate(true, '"email" parameter is missing', 400, null)
                 reject(apiResponse)
@@ -247,8 +251,7 @@ let loginFunction = (req, res) => {
             })*/
 
             let checkToken = passwordLib.comparePasswordGenerated(req.body.password, retrievedUserDetails.password);
-            if (checkToken === true)
-            {
+            if (checkToken === true) {
                 let retrievedUserDetailsObj = retrievedUserDetails.toObject()
                 delete retrievedUserDetailsObj.password
                 delete retrievedUserDetailsObj._id
@@ -261,8 +264,8 @@ let loginFunction = (req, res) => {
             } else {
 
                 logger.info('Login Failed Due To Invalid Password', 'userController: validatePassword()', 10)
-                    let apiResponse = response.generate(true, 'Wrong Password.Login Failed', 400, null)
-                    reject(apiResponse)
+                let apiResponse = response.generate(true, 'Wrong Password.Login Failed', 400, null)
+                reject(apiResponse)
 
             }
         })
@@ -336,7 +339,7 @@ let loginFunction = (req, res) => {
         })
     }
 
-    findUser(req,res)
+    findUser(req, res)
         .then(validatePassword)
         .then(generateToken)
         .then(saveToken)
@@ -363,21 +366,141 @@ let loginFunction = (req, res) => {
  * auth params: userId.
  */
 let logout = (req, res) => {
-  AuthModel.findOneAndRemove({userId: req.user.userId}, (err, result) => {
-    if (err) {
-        console.log(err)
-        logger.error(err.message, 'user Controller: logout', 10)
-        let apiResponse = response.generate(true, `error occurred: ${err.message}`, 500, null)
-        res.send(apiResponse)
-    } else if (check.isEmpty(result)) {
-        let apiResponse = response.generate(true, 'Already Logged Out or Invalid UserId', 404, null)
-        res.send(apiResponse)
-    } else {
-        let apiResponse = response.generate(false, 'Logged Out Successfully', 200, null)
-        res.send(apiResponse)
-    }
-  })
+    AuthModel.findOneAndRemove({ userId: req.user.userId }, (err, result) => {
+        if (err) {
+            console.log(err)
+            logger.error(err.message, 'user Controller: logout', 10)
+            let apiResponse = response.generate(true, `error occurred: ${err.message}`, 500, null)
+            res.send(apiResponse)
+        } else if (check.isEmpty(result)) {
+            let apiResponse = response.generate(true, 'Already Logged Out or Invalid UserId', 404, null)
+            res.send(apiResponse)
+        } else {
+            let apiResponse = response.generate(false, 'Logged Out Successfully', 200, null)
+            res.send(apiResponse)
+        }
+    })
 } // end of the logout function.
+
+
+//for forgot password
+
+let forgotPassword = (req, res) => {
+
+    let toCheckEmail = () => {
+        console.log("toCheckEmail");
+        return new Promise((resolve, reject) => {
+            if (req.body.email) {
+                console.log("req body email is there");
+                console.log(req.body);
+                UserModel.findOne({ email: req.body.email }, (err, userDetails) => {
+
+                    if (err) {
+                        console.log(err)
+                        logger.error('Failed To Retrieve User Data', 'userController: forgotpassword()->toCheckemail()', 10)
+                        /* generate the error message and the api response message here */
+                        let apiResponse = response.generate(true, 'Failed To Find given emails- User Details', 500, null)
+                        reject(apiResponse)
+                        /* if Company Details is not found */
+                    } else if (check.isEmpty(userDetails)) {
+                        /* generate the response and the console error message here */
+                        logger.error('THIS EMAIL BELONGS TO NO USER', 'userController: forgotpassword()->toCheckemail()', 7)
+                        let apiResponse = response.generate(true, 'THIS EMAIL BELONGS TO NO USER', 404, null)
+                        reject(apiResponse)
+                    } else {
+                        /* prepare the message and the api response here */
+                        logger.info('User Found', 'userController: forgotpassword()->toCheckemail()', 10)
+                        //console.log(userDetails+"_____________++++++++++++_____________");
+
+                        // let retrievedUserDetailsObj = userDetails.toObject();
+                        userDetails.resetPasswordToken = shortid.generate();
+                        userDetails.resetPasswordExpires = Date.now() + 3600000;
+                        userDetails.save((err, userDetails) => {
+                            if (err) {
+                                console.log(err)
+                                logger.error(err.message, 'userController: forgot password', 10)
+                                let apiResponse = response.generate(true, 'Failed to create or save reset token', 500, null)
+                                reject(apiResponse)
+                            } else {
+                                let newUserObj = userDetails.toObject();
+                                let message = 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
+                                'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
+                                'http://' + req.headers.host + '/reset/' + newUserObj.resetPasswordToken + '\n\n' +
+                                'If you did not request this, please ignore this email and your password will remain unchanged.\n';
+                                
+                                
+                                let info = mailer.sendMail(newUserObj.email, message);
+                                resolve(userDetails)
+                                console.log(newUserObj + "*************************************")
+                            }
+                        })
+                        //resolve(retrievedUserDetailsObj);
+                    }
+
+                });
+            }
+        })
+    }
+    toCheckEmail(req, res)
+        .then((resolve) => {
+            let apiResponse = response.generate(false, 'mail-sent successfully', 200, resolve)
+            res.status(200)
+            res.send(apiResponse)
+        })
+        .catch((err) => {
+            console.log("errorhandler");
+            console.log(err);
+            res.status(err.status)
+            res.send(err)
+        })
+
+    //
+}
+
+let resetPassword =(req,res) =>
+{
+    UserModel.findOne({ resetPasswordToken: req.params.token ,resetPasswordExpires : { $gt: Date.now() } } , (err, userDetails) => {
+        if(err)
+        {
+            console.log(err)
+                        logger.error('Failed To Retrieve User Data', 'userController: resetPassword', 10)
+                        /* generate the error message and the api response message here */
+                        let apiResponse = response.generate(true, 'Failed To Find given token- User Details', 500, null)
+                        res.send(apiResponse)
+        }else if (check.isEmpty(userDetails)) {
+
+            logger.error('Password reset token is invalid or has expired.', 'userController: resetPassword', 7)
+                        let apiResponse = response.generate(true, 'Password reset token is invalid or has expired.', 408, null)
+                        res.send(apiResponse)
+
+        } else {
+            userDetails.password =  passwordLib.hashpasswordUsingMd5(req.body.newpassword);
+            userDetails.resetPasswordToken =undefined;
+            userDetails.resetPasswordExpires=undefined;
+
+            userDetails.save((err, userDetails) => {
+                if (err) {
+                    console.log(err)
+                    logger.error(err.message, 'userController: reset password', 10)
+                    let apiResponse = response.generate(true, 'Failed to create or save reset password', 500, null)
+                    res.send(apiResponse)
+                }
+                else {
+
+                    let message ='This is a confirmation that the password for your account ' + userDetails.email + ' has just been changed.\n';
+                    let info = mailer.sendMail(userDetails.email, message);
+                    logger.info('mail sent successfully after reset-password.', 'userController: resetPassword', 7)
+                    let apiResponse = response.generate(false, 'mail sent successfully after reset-password.', 200, null)
+                    res.send(apiResponse)
+
+                }
+
+            })
+
+        }
+
+    })
+}
 
 
 module.exports = {
@@ -388,6 +511,8 @@ module.exports = {
     deleteUser: deleteUser,
     getSingleUser: getSingleUser,
     loginFunction: loginFunction,
-    logout: logout
+    logout: logout,
+    forgotPassword: forgotPassword,
+    resetPassword:resetPassword
 
 }// end exports

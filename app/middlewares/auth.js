@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken')
 const request = require("request")
 const Auth = mongoose.model('Auth')
+const User = mongoose.model("User")
 
 const logger = require('./../libs/loggerLib')
 const responseLib = require('./../libs/responseLib')
@@ -23,6 +24,7 @@ let isAuthorized = (req, res, next) => {
         let apiResponse = responseLib.generate(true, 'Invalid Or Expired AuthorizationKey', 404, null)
         res.send(apiResponse)
       } else {
+        console.log(authDetails+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
         token.verifyToken(authDetails.authToken,authDetails.tokenSecret,(err,decoded)=>{
 
             if(err){
@@ -32,8 +34,30 @@ let isAuthorized = (req, res, next) => {
             }
             else{
                 
-                req.user = {userId: decoded.data.userId}
-                next()
+              User.findOne({ userId: decoded.data.userId }, (err, authUserDetails) => {
+
+                if (err) {
+                  console.log(err);
+                  logger.error(err.message, 'Authorization Middleware -> Checking For admin status', 10);
+                  let apiResponse = responseLib.generate(true, 'Failed To Check User For Admin', 500, null);
+                  res.send(apiResponse)
+                } else if (check.isEmpty(authUserDetails)) {
+                  logger.error('No UserDetailPresent', 'Authorization Middleware -> Checking For admin status', 10)
+                  let apiResponse = responseLib.generate(true, 'Invalid or Empty User Details', 404, null)
+                  res.send(apiResponse)
+  
+                } else {
+                  if (authUserDetails.typeOfUser === "Admin") {
+                    req.user = { userId: decoded.data.userId, isAdmin: true }
+                    next()
+                  }
+                  else {
+                    req.user = { userId: decoded.data.userId, isAdmin: false };
+                    next()
+                  }
+                  console.log(req.user);
+                }
+              })
             }
 
 

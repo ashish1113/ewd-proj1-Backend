@@ -34,6 +34,14 @@ const Event = new Schema({
   },
   EventDurationInHours: {
     type:Number
+  },
+  eventLocation: {
+    type: String,
+    default:""
+  },
+  eventDescription:{
+    type: String,
+    default: ""
   }
 })
 

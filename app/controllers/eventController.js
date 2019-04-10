@@ -45,7 +45,9 @@ let eventCreator = (req, res) => {
                 createdOn: time.now(),
                 startTime: time.addHoursToDay(req.body.startDate, startFullTimeDetails),
                 endTime: time.addHoursToDay(req.body.endDate, endFullTimeDetails),
-                EventDurationInHours: eventDurationInHrs
+                EventDurationInHours: eventDurationInHrs,
+                eventLocation: req.body.eventLocation,
+                eventDescription: req.body.eventDescription
                 //normalTime:time.getLocalTime(newEvent.startTime)
             })
             newEvent.save((err, newEvent) => {

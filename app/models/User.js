@@ -35,6 +35,10 @@ let userSchema = new Schema({
     default: '',
     unique: true
   },
+  countryCode: {
+    type: String,
+    
+  },
   mobileNumber: {
     type: Number,
     default: 0
@@ -46,7 +50,13 @@ let userSchema = new Schema({
   typeOfUser :{
     type:String,
     default:"Normal"
-  }
+  },
+  country: {
+    type: String,
+   //default:"91"
+  },
+  resetPasswordToken: String,
+  resetPasswordExpires: Date
 
 
 })
