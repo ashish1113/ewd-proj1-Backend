@@ -41,7 +41,7 @@ let eventCreator = (req, res) => {
                 userEmail: req.body.email.toLowerCase(),
                 eventTitle: req.body.eventTitle,
                 eventId: shortid.generate(),
-                mobileNumber: req.body.mobileNumber,
+                userMobileNumber: req.body.userMobileNumber,
                 createdOn: time.now(),
                 startTime: time.addHoursToDay(req.body.startDate, startFullTimeDetails),
                 endTime: time.addHoursToDay(req.body.endDate, endFullTimeDetails),

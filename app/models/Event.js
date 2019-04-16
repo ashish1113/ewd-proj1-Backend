@@ -42,7 +42,12 @@ const Event = new Schema({
   eventDescription:{
     type: String,
     default: ""
+  },
+  notificationToken:{
+    type:Boolean,
+    default :true
   }
+
 })
 
 module.exports = mongoose.model('Event', Event)

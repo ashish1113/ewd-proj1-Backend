@@ -48,7 +48,7 @@ let isAuthorized = (req, res, next) => {
   
                 } else {
                   if (authUserDetails.typeOfUser === "Admin") {
-                    req.user = { userId: decoded.data.userId, isAdmin: true }
+                    req.user = { userId: decoded.data.userId, isAdmin: true , authinfo : {username: authUserDetails.userName ,name:authUserDetails.firstName} }
                     next()
                   }
                   else {

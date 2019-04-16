@@ -77,7 +77,7 @@ module.exports.setRouter = (app) => {
     //to create event
     app.post(`${baseUrl}/event`,auth.isAuthorized,checkAdmin.isAdmin, eventController.eventCreator);
 
-    app.get(`${baseUrl}/:email/details`,auth.isAuthorized, checkAdmin.isAdmin,eventController.getSingleUserEvents);
+    app.get(`${baseUrl}/:email/details/allEvents`,auth.isAuthorized,eventController.getSingleUserEvents);
 
     app.put(`${baseUrl}/:eventId/edit`, auth.isAuthorized,checkAdmin.isAdmin, eventController.editEvent);
 
