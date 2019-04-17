@@ -10,9 +10,15 @@ let checkEventForTime = (eventArray) =>{
     let event1MinArray = [];
     for (let x in eventArray){
 
-        if ((((moment( eventArray[x].startTime).diff(moment().seconds(0).milliseconds(0).toISOString()))))==1000*60)
+        // console.log((moment().seconds(0).milliseconds(0).toISOString()))
+        // console.log("---------------------------------------------------")
+        // console.log(moment( eventArray[x].startTime).toISOString())
+        // console.log("-------------------------@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@--------------------------")
+        // console.log((moment( eventArray[x].startTime)).diff(moment().seconds(0).milliseconds(0)))
+        if ((((moment( eventArray[x].startTime).diff(moment().seconds(0).milliseconds(0)))))==1000*60)
          {    
             
+
             //console.log((((moment(eventArray[x].startTime).diff(moment(time.now()))))/60000))
             event1MinArray.push(eventArray[x])
         //     if (Math.floor(((moment(eventArray[x].startTime).diff(moment(time.now()))))/60000) == 1)

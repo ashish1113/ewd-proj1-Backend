@@ -37,7 +37,22 @@ let isAdmin = (req, res, next) => {
     }
 }
 
+let isAuthorisedForEditAndDelete = (req, res, next) => {
+    if(req.user.isAdmin === true){
+        next()
+    }
+    else
+    {
+        console.log("You are not allowed for the action --contact--admin");
+                  logger.error("You are not allowed for the action --contact--admin", 'Authorization Middleware -> Checking For CheckAdmin Middleware', 7);
+                  let apiResponse = responseLib.generate(true, 'Not Allowed for the Actions ahead', 401, null);
+                  res.send(apiResponse)
+
+    }
+}
+
 module.exports = {
-    isAdmin: isAdmin
+    isAdmin: isAdmin,
+    isAuthorisedForEditAndDelete:isAuthorisedForEditAndDelete
   }
   

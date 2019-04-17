@@ -6,6 +6,7 @@ const events = require('events');
 const eventEmitter = new events.EventEmitter();
 
 const tokenLib = require("./tokenLib.js");
+const mailLib =require("./mailingLib.js")
 const check = require("./checkLib.js");
 const response = require('./responseLib')
 
@@ -81,64 +82,77 @@ let setServer = (server) => {
 
         }) // end of listening set-user event
 
-        /*cron.schedule("* * * * *", function () {
-            EventModel.find(function (err, res) {
+        // cron.schedule("* * * * *", function () {
+        //     EventModel.find(function (err, res) {
 
-                if (res) {
-                    let eventArray = checkEvent.checkEventForTime(res);
-                    console.log("eventsArray are:", eventArray);
-                    console.log("===========================================================");
+        //         if (res) {
+        //             let eventArray = checkEvent.checkEventForTime(res);
+        //             for (let x =0 ;x < eventArray.length ;x++ )
+        //             {
+        //                 let message = {
+        //                     eventDetails : eventArray[x]
+                            
+        //                 }
+        //                 let messageTobeSend = `this is an notification mail for an event coming soon for details refer to the following:
+        //                 ${message} `;
+        //                 let email = eventArray[x].userEmail;
+        //                 mailingLib.sendMail(email,messageTobeSend);
+        //             }
 
-                    let eventTobeNotified = checkEvent.compareEmail(eventArray, allOnlineUsers)
+        //         }
+        //         else {
 
-                    console.log("events are:", eventTobeNotified);
-                    if (eventTobeNotified.length > 0) {
-                        for (let x = 0; x < eventTobeNotified.length; x++) {
-                            myIo.to(`${eventTobeNotified[x].userSoketId}`).emit('notification-send', "your notification" + eventTobeNotified[x].userSoketId);
+        //         }
+
+        //     });
+        // })
+
+
+        socket.on('notification1', (userdata) => {
+            console.log("user data inside:", userdata);
+            tokenLib.verifyClaimWithoutSecret(userdata.authToken, (err, user) => {
+                if (user) {
+                    EventModel.find({ userEmail: user.data.email }, function (err, res) {
+
+                        if (res) {
+                            //console.log("inside user:",res);
+                            let eventArray = checkEvent.checkEventForTime(res);
+                            console.log("eventsArray are:", eventArray);
+                            console.log("===========================================================");
+
+                            if (eventArray.length > 0) {
+                                for (let x = 0; x < eventArray.length; x++) {
+
+                                    let notificationObj = {
+                                        notificationId: shortid.generate(),
+                                        eventToOccurAt: eventArray[x].startTime,
+                                        userEmail: eventArray[x].userEmail,
+                                        eventDetails: eventArray[x],
+                                        isSnooze :false
+                                    }
+
+                                    // setTimeout(function () {
+
+                                    //     eventEmitter.emit('send-email', user.data);
+                        
+                                    // }, 2000)
+
+                                    myIo.to(`${userdata.userSocketId}`).emit('notification-send',  notificationObj);
+                                    
+                                }
+
+                            }
                         }
 
-                    }
+
+                    })
 
                 }
-                else {
 
-                }
+
 
             });
-        })*/
-
-
-        socket.on('notification1',(userdata) => { 
-            console.log("user data inside:",userdata);
-            tokenLib.verifyClaimWithoutSecret(userdata.authToken, (err, user) => {
-                if (user)
-                {
-                    EventModel.find({userEmail:user.data.email},function (err, res) {
-
-                        if(res)
-                        {   
-                            //console.log("inside user:",res);
-                            let eventArray = checkEvent.checkEventForTime(res);   
-                            console.log("eventsArray are:", eventArray);
-                    console.log("===========================================================");
-
-                    if (eventArray.length > 0) {
-                        for (let x = 0; x < eventArray.length; x++) {
-                            myIo.to(`${userdata.userSocketId}`).emit('notification-send', "your notification" + eventArray[x].userEmail+"eventId="+eventArray[x].id);
-                        }
-
-                    }
-                        }
-
-                 
-                           })       
-
-                }
-
-
-
         });
-    });
 
 
 

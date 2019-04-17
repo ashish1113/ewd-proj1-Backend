@@ -7,88 +7,106 @@ var notificationFlag = false;
 //const eventId = "zvq-yxsfR";
 //const email
 //var userNotificationdata ={userSocketId:socket.id,message:"you received a notification"}
+
+
 let chatSocket = () => {
 
-    socket.on('verifyUser', (data) => {
+  socket.on('verifyUser', (data) => {
 
-        console.log("socket trying to verify user");
+    console.log("socket trying to verify user");
 
-        console.log(socket)
-        console.log("-------------------------------------------------------=========================------------------------------");
-        
-
-       console.log(socket.id)
-
-        let userdata ={authToken:authToken,userSocketId:socket.id}
+   // console.log(socket)
+    console.log("-------------------------------------------------------=========================------------------------------");
     
-        socket.emit("set-user",userdata);
+
+   console.log(socket.id)
+
+    let userdata1 ={authToken:authToken,userSocketId:socket.id}
+
+    socket.emit("set-user",userdata1);
     
-      });
 
-      if (userStatus === "admin"){
-      socket.on("online-user-list", (data) => {
-        
-        console.log("Online user list is updated. some user can online or went offline")
-        console.log("-------------------------------------------------------=========================------------------------------");
-        console.log(data)
+    setInterval(function() {
+     
+      let userdata1 ={authToken:authToken,userSocketId:socket.id}
+      socket.emit('notification1',userdata1);
 
-        console.log("-------------------------------------------------------=========================------------------------------");
+      
+    },1000*60);
+
+
+
+  });
+
+  
+  if (userStatus === "admin"){
+  socket.on("online-user-list", (data) => {
+    
+    console.log("Online user list is updated. some user can online or went offline")
+    console.log("-------------------------------------------------------=========================------------------------------");
+    console.log(data)
+    console.log("-------------------------------------------------------=========================------------------------------");
 
     console.log(socket)
     
-      });
-    }
-    else {
-        console.log("you are a normal user")
-    }
+  });
+}
+else {
+    console.log("you are a normal user")
+    //let userdata1 ={authToken:authToken,userSocketId:socket.id}
+    //socket.emit('notification1',userdata1);
+}
 
-    /*socket.on("online-user-list", (data) => {
-        
-        console.log("Online user list is updated. some user can online or went offline")
-        console.log("-------------------------------------------------------=========================------------------------------");
 
-        console.log(socket.id)
-        console.log(data)
+ 
+ /* let userNotificationdata ={authToken:authToken,message:"you received a notification"}
+  let userdata ={authToken:authToken,userSocketId:socket.id}
+  socket.emit('notification',userNotificationdata);*/
+
+  
+
+  // let notification =(userdataAgu) => {
+  // socket.emit('notification',userdataAgu);
+  // }
+
+  // let userdata ={authToken:authToken,userSocketId:socket.id}
+  // socket.emit('notification',userdata);
+  //setInterval(notification(userdata), 1000*60*60);
+  //notification(userdata);
+ 
+  socket.on("notification-send",(data1)=>{
+   console.log(".,.,.,.,.,.,.------------------------------------------------------------------,.,.,.,,.,.,.,.")
+   console.log(data1);
+   console.log(".,.,.,.,.,.,.------------------------------------------------------------------,.,.,.,,.,.,.,.")
+   $("#send").on('click', function () {
+     data1.isSnooze =true;
     
-      });*/
-     
-     /* let userNotificationdata ={authToken:authToken,message:"you received a notification"}
-
-      socket.emit('notification',userNotificationdata);*/
-
-      let notification =(userdataAgu) => {
-        socket.emit('notification',userdataAgu);
-        }
-      
-        let userdata ={authToken:authToken,userSocketId:socket.id}
-        setInterval(notification(userdata), 1000*60*60);
-     
-
-
-      socket.on("notification-send",(data1)=>{
-       console.log(".,.,.,.,.,.,.,.,.,.,,.,.,.,.")
-       console.log(data1);
-      })
-
-      $("#send").on('click', function () {
-
-        //let userNotificationdata ={authToken:authToken,message:"you received a notification"}
-        /*let userdata ={authToken:authToken,userSocketId:socket.id,message:"you received a notification"}
-      socket.emit('notification',userdata);*/
+     var snooze = setInterval(function() {
+      let eventTime = new Date(data1.eventDetails.startTime);
+         let timeNow = new Date()
+         var c = 1
          
-      
-      notificationFlag = true;
-
-         if (notificationFlag === true){
-          let userdata ={authToken:authToken,userSocketId:socket.id,message:"you received a notification"}
-         // socket.emit('Event-notification',userdata);
-         // notificationFlag = false;
-        }
-      
-      })
-
-      
+         if ((eventTime > timeNow))
+         {
+           console.log(data1);
+           console.log(".,.,.,.,.,.,.------------------------------------------------------------------,.,.,.,,.,.,.,.")
+           console.log(c)
+           c=c+1;
+         }
+         else{
+          console.log("exit");
+          clearInterval(snooze);
+         }
     
+     },5000)
+    
+
+   })
+
+  })
+
+  
+
 }
 
 chatSocket();

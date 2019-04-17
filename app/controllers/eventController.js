@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const shortid = require('shortid');
 const time = require('./../libs/timeLib');
 const passwordLib = require('./../libs/generatePasswordLib');
+const mailingLib = require("./../libs/mailingLib")
 const response = require('./../libs/responseLib')
 const logger = require('./../libs/loggerLib');
 const validateInput = require('../libs/paramsValidationLib')
@@ -9,6 +10,12 @@ const check = require('../libs/checkLib')
 const token = require('../libs/tokenLib')
 const AuthModel = mongoose.model('Auth')
 const EventModel = mongoose.model('Event')
+const events = require('events');
+const eventEmitter = new events.EventEmitter();
+
+const checkEvent = require('./../libs/checkEventLib')
+const cron = require("node-cron");
+
 
 let eventCreator = (req, res) => {
 
@@ -50,6 +57,8 @@ let eventCreator = (req, res) => {
                 eventDescription: req.body.eventDescription
                 //normalTime:time.getLocalTime(newEvent.startTime)
             })
+
+            if(new Date(newEvent.startTime) > new Date()){
             newEvent.save((err, newEvent) => {
                 if (err) {
                     console.log(err)
@@ -58,12 +67,21 @@ let eventCreator = (req, res) => {
                     reject(apiResponse)
                 } else {
                     let newEventObj = newEvent.toObject();
+                    eventEmitter.emit("new-event-created",newEventObj);
                     resolve(newEventObj)
                     console.log("normalstarttime:" + newEventObj.startTime)
                     console.log("normalendtime:" + newEventObj.endTime)
                     console.log("total duration" + newEventObj.EventDurationInHours);
                 }
             })
+
+        }
+        else{
+            logger.error("Check Start Time ", 'EventController: createEvent', 10)
+                    let apiResponse = response.generate(true, 'Failed to create new event-as the time is not valid', 500, null)
+                    reject(apiResponse)
+
+        }
             /*EventModel.findOne({ userEmail: req.body.email })
                 .exec((err, retrievedEventsDetails) => {
                     if (err) {
@@ -96,7 +114,21 @@ let eventCreator = (req, res) => {
                     }
                 })*/
         })
+
+    //     // eventEmitter.on("new-event-created",(eventData)=>{
+    //     //     let message = `your event eith (eventid:-${eventData.eventId})is created at ${eventData.createdOn}`;
+    //     //     let emailToSend = eventData.userEmail
+    //     //     mailingLib.sendMail(emailToSend,message)
+
+    // })
     }// end create user function
+    
+    eventEmitter.on("new-event-created",(eventData)=>{
+        let message = `your event eith (eventid:-${eventData.eventId})is created at ${eventData.createdOn}`;
+        let emailToSend = eventData.userEmail
+        mailingLib.sendMail(emailToSend,message)
+
+    })
 
 
     validateEventInput(req, res)
@@ -150,12 +182,31 @@ let editEvent = (req, res) => {
             res.send(apiResponse)
         } else {
             let apiResponse = response.generate(false, 'Event details edited', 200, result)
+            eventEmitter.emit("event-edited",req.params.eventId);
             res.send(apiResponse)
         }
     });// end event model update
 
+    eventEmitter.on("event-edited",(data)=>
+    {    console.log(data);
+        EventModel.find({ 'eventId': data },(err,result)=>{
+            if(result)
+            {
+                let message = `some modification is done with your event with following Detalis :-
+                ${result}`
+                let emailToSendOnEditing = result[0].userEmail;
+                console.log(result)
+
+                console.log(emailToSendOnEditing)
+                mailingLib.sendMail(emailToSendOnEditing,message)
+
+            }
+        })
+
+    });
 
 }// end edit event
+
 
 //start of delete event func
 
@@ -173,12 +224,60 @@ let deleteEvent = (req, res) => {
             res.send(apiResponse)
         } else {
             let apiResponse = response.generate(false, 'Deleted the event successfully', 200, result)
+            eventEmitter.emit("event-deleted",req.params.eventId);
             res.send(apiResponse)
         }
     });// end event model find and remove
 
+    eventEmitter.on("event-deleted",(data)=>
+    {
+        EventModel.find({ 'eventId': data },(err,result)=>{
+            if(result)
+            {
+                let message = `an event with ${data} is deleted`
+                let emailToSendOnDeleting = result[0].userEmail;
+                mailingLib.sendMail(emailToSendOnDeleting,message)
+
+            }
+        })
+
+    });
 
 }// end delete event
+
+
+cron.schedule("* * * * *", function () {
+    EventModel.find(function (err, res) {
+
+        if (res) {
+            let eventArray = checkEvent.checkEventForTime(res);
+            for (let x =0 ;x < eventArray.length ;x++ )
+            {
+                let message = {
+                    eventId : eventArray[x].eventId,
+                    eventTitle:eventArray[x].eventTitle,
+                    eventStartTime:eventArray[x].startTime,
+                    eventLocation:eventArray[x].eventLocation,
+                    eventCreator:eventArray[x].eventCreator
+                   
+                    
+                    
+                }
+                let messageTobeSend = `this is an notification mail for an event coming soon for details refer to the following:
+                ${message} `;
+                let email = eventArray[x].userEmail;
+                mailingLib.sendMail(email,messageTobeSend);
+            }
+
+        }
+        else {
+
+        }
+
+    });
+})
+
+
 
 module.exports = {
     eventCreator: eventCreator,

@@ -79,7 +79,7 @@ module.exports.setRouter = (app) => {
 
     app.get(`${baseUrl}/:email/details/allEvents`,auth.isAuthorized,eventController.getSingleUserEvents);
 
-    app.put(`${baseUrl}/:eventId/edit`, auth.isAuthorized,checkAdmin.isAdmin, eventController.editEvent);
+    app.put(`${baseUrl}/:eventId/edit`, auth.isAuthorized,checkAdmin.isAuthorisedForEditAndDelete, eventController.editEvent);
 
-    app.post(`${baseUrl}/:eventId/delete`, auth.isAuthorized,checkAdmin.isAdmin, eventController.deleteEvent);
+    app.post(`${baseUrl}/:eventId/delete`, auth.isAuthorized,checkAdmin.isAuthorisedForEditAndDelete, eventController.deleteEvent);
 }
