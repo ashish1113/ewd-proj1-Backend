@@ -20,6 +20,11 @@ const Event = new Schema({
     type:Date,
     default:""
   },
+  createdBy :{
+    type:String,
+    default:"Admin"
+
+  },
     startTime: {
     type: Date,
     //default: time.now()

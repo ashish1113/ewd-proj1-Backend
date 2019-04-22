@@ -20,7 +20,7 @@ const timeZone = 'Asia/Calcutta'
 const time = require('./timeLib');
 const checkEvent = require('./checkEventLib')
 const cron = require("node-cron");
-
+//const redisLib = require("./redisLib.js");
 
 
 let setServer = (server) => {
@@ -36,42 +36,104 @@ let setServer = (server) => {
 
 
 
-        console.log("on connection--emitting verify user");
+        //console.log("on connection--emitting verify user");
 
         socket.emit("verifyUser", "");
 
 
         socket.on('set-user', (data) => {
 
-            console.log("set-user called")
+            //console.log("set-user called")
 
-            console.log(data);
+            //console.log("data passed to set-user event: ",data);
             tokenLib.verifyClaimWithoutSecret(data.authToken, (err, user) => {
                 if (err) {
                     socket.emit('auth-error', { status: 500, error: 'Please provide correct auth token' })
                 }
                 else {
 
-                    console.log("user is verified..setting details");
+                    //console.log("user is verified..setting details");
+                    console.log("user data post success auth token verification: ",user);
                     let currentUser = user.data;
                     // setting socket user id 
                     socket.userName = currentUser.userName
                     let fullName = `${currentUser.firstName} ${currentUser.lastName}`
+                    // let key = currentUser.userName
+                    // let value = fullName
                     console.log(`${fullName} is online`);
 
+                    //let userExists=false;
+                    let userObj = { userName: currentUser.userName, fullName: fullName }
+                    // if(allOnlineUsers.length>0){
+                    //     for(let x in allOnlineUsers)
+                    //     {
+                    //         console.log("onlineuser listusername: ",allOnlineUsers[x].userName)
+                    //         console.log("userobj username: ",userObj.userName);
+                    //         if(allOnlineUsers[x].userName == userObj.userName)
+                    //         {
+                    //             console.log("I came here");
+                    //             break;
+                    //         }
+                    //         else{
+                    //             allOnlineUsers.push(userObj);
+                    //         }
+                    //     }
+                    // }
+                    
+                    // else{
+                    //     allOnlineUsers.push(userObj)
+                    // }
+                    var removeIndex = allOnlineUsers.map(function (user) { return user['userName']; }).indexOf(userObj.userName);
+                    if(removeIndex==-1){
+                        allOnlineUsers.push(userObj);
+                    }
+                      //allOnlineUsers.push(userObj)
+                     console.log("online user list after successful set-user: ",allOnlineUsers)
 
-                    let userObj = { userName: currentUser.userName, fullName: fullName, email: currentUser.email, userSocketId: data.userSocketId }
-                    allOnlineUsers.push(userObj)
-                    console.log(allOnlineUsers)
+                     myIo.emit('online-user-list', allOnlineUsers);
 
-                    // setting room name
-                    //socket.room = 'MP-INTERFACE'
-                    // joining chat-group room.
-                    // socket.join(socket.room)
-                    // socket.to(socket.room).broadcast.emit('online-user-list',allOnlineUsers);
-                    // myIo.in(socket.room).emit('online-user-list', allOnlineUsers); 
-                    myIo.emit('online-user-list', allOnlineUsers); //sending to all clients, include sender
-                    //socket.emit('online-user-list', allOnlineUsers);
+
+
+                    // let setUserOnline = redisLib.setANewOnlineUserInHash("onlineUsers", key, value, (err, result) => {
+                    //     if (err) {
+                    //         console.log(`some error occurred`)
+                    //     } else {
+                    //         // getting online users list.
+
+                    //         redisLib.getAllUsersInAHash('onlineUsers', (err, result) => {
+                    //             console.log(`--- inside getAllUsersInAHas function ---`)
+                    //             if (err) {
+                    //                 console.log(err)
+                    //             } else {
+                    //                 console.log("*********************************************")
+                    //                 console.log(result);
+                    //                 console.log("*********************************************")
+                    //                 // setting room name
+                    //                 socket.room = 'edChat'
+                    //                 // joining chat-group room.
+                    //                 socket.join(socket.room)
+                    //                 socket.to(socket.room).broadcast.emit('online-user-list', result);
+                    //                 // myIo.emit('online-user-list', result);
+
+
+                    //             }
+                    //         })
+                    //     }
+                    // })
+
+
+                    // let userObj = { userName: currentUser.userName, fullName: fullName }
+                    // allOnlineUsers.push(userObj)
+                    // console.log(allOnlineUsers)
+
+                    // // setting room name
+                    // //socket.room = 'MP-INTERFACE'
+                    // // joining chat-group room.
+                    // // socket.join(socket.room)
+                    // // socket.to(socket.room).broadcast.emit('online-user-list',allOnlineUsers);
+                    // // myIo.in(socket.room).emit('online-user-list', allOnlineUsers); 
+                    // myIo.emit('online-user-list', allOnlineUsers); //sending to all clients, include sender
+                    // //socket.emit('online-user-list', allOnlineUsers);
 
 
                     //socket.to(socket.room).broadcast.emit('online-user-list',allOnlineUsers);
@@ -79,6 +141,8 @@ let setServer = (server) => {
 
 
             })
+            // console.log("-----------------------------------------")
+            // console.log(allOnlineUsers);
 
         }) // end of listening set-user event
 
@@ -164,19 +228,38 @@ let setServer = (server) => {
             // remove the user from online list
             // unsubscribe the user from his own channel
 
-            console.log("user is disconnected");
+            //console.log("user is disconnected");
             // console.log(socket.connectorName);
-            console.log(socket.userName);
+            console.log("socket username on disconnect: ",socket.userName);
 
-
-            var removeIndex = allOnlineUsers.map(function (user) { return user.userName; }).indexOf(socket.userName);
-            allOnlineUsers.splice(removeIndex, 1)
-            console.log(allOnlineUsers)
+            if(socket.userName){
+                var removeIndex = allOnlineUsers.map(function (user) { return user['userName']; }).indexOf(socket.userName);
+                console.log("removed index: ",removeIndex);
+                allOnlineUsers.splice(removeIndex, 1)
+            }
+             
+            console.log("updated online user list on disconnect: ",allOnlineUsers)
 
             myIo.emit('online-user-list', allOnlineUsers);
-            //io.in(socket.room).emit('online-user-list', allOnlineUsers); 
+            // //io.in(socket.room).emit('online-user-list', allOnlineUsers); 
             // socket.to(socket.room).broadcast.emit('online-user-list',allOnlineUsers);
             // socket.leave(socket.room)
+
+
+            // if (socket.userName) {
+            //     redisLib.deleteUserFromHash('onlineUsers', socket.userName)
+            //     redisLib.getAllUsersInAHash('onlineUsers', (err, result) => {
+            //         if (err) {
+            //             console.log(err)
+            //         } else {
+            //              socket.leave(socket.room)
+            //              socket.to(socket.room).broadcast.emit('online-user-list', result);
+            //             //myIo.emit('online-user-list', result);
+
+            //         }
+            //     })
+            // }
+
 
 
 

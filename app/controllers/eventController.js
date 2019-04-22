@@ -50,6 +50,7 @@ let eventCreator = (req, res) => {
                 eventId: shortid.generate(),
                 userMobileNumber: req.body.userMobileNumber,
                 createdOn: time.now(),
+                createdBy:req.body.createdBy,
                 startTime: time.addHoursToDay(req.body.startDate, startFullTimeDetails),
                 endTime: time.addHoursToDay(req.body.endDate, endFullTimeDetails),
                 EventDurationInHours: eventDurationInHrs,
@@ -149,8 +150,9 @@ let eventCreator = (req, res) => {
 let getSingleUserEvents = (req, res) => {
     EventModel.find({ 'userEmail': req.params.email })
         .select('-__v -_id')
-        .lean()
+        
         .exec((err, result) => {
+            console.log("req--------------------------------------------",req.params.email)
             if (err) {
                 console.log(err)
                 logger.error(err.message, 'Event Controller: getSingleUserEvents', 10)
@@ -158,7 +160,8 @@ let getSingleUserEvents = (req, res) => {
                 res.send(apiResponse)
             } else if (check.isEmpty(result)) {
                 logger.info('No Event Found', 'Event Controller:getSingleUserEvents')
-                let apiResponse = response.generate(true, 'No Event Found', 404, null)
+                let apiResponse = response.generate(true, 'No Event Found 1', 404, null)
+                
                 res.send(apiResponse)
             } else {
                 let apiResponse = response.generate(false, 'Events Details Found', 200, result)
