@@ -427,9 +427,10 @@ let forgotPassword = (req, res) => {
                                 'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
                                 'http://' + req.headers.host + '/reset/' + newUserObj.resetPasswordToken + '\n\n' +
                                 'If you did not request this, please ignore this email and your password will remain unchanged.\n';
+                                let htmlMessage =  '<a href=http://localhost:4200/api/v1/users/' + 'reset/' + newUserObj.resetPasswordToken+'>'+"link"+'</a>'
                                 
-                                
-                                let info = mailer.sendMail(newUserObj.email, message);
+                                let info = mailer.sendMail1(newUserObj.email, message,htmlMessage);
+                               //main().catch(console.error);
                                 resolve(userDetails)
                                 console.log(newUserObj + "*************************************")
                             }
@@ -450,7 +451,7 @@ let forgotPassword = (req, res) => {
         .catch((err) => {
             console.log("errorhandler");
             console.log(err);
-            res.status(err.status)
+            //res.status(err.status)
             res.send(err)
         })
 
@@ -473,8 +474,8 @@ let resetPassword =(req,res) =>
                         let apiResponse = response.generate(true, 'Password reset token is invalid or has expired.', 408, null)
                         res.send(apiResponse)
 
-        } else {
-            userDetails.password =  passwordLib.hashpasswordUsingMd5(req.body.newpassword);
+        } else {//ek event emit karna hai fronteend usope  listen karega aur ek component render karega
+            userDetails.password =  passwordLib.hashpasswordUsingMd5(req.body.newPassword);
             userDetails.resetPasswordToken =undefined;
             userDetails.resetPasswordExpires=undefined;
 

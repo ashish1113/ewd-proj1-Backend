@@ -11,7 +11,7 @@ let generateToken = (data, cb) => {
       iat: Date.now(),
       exp: Date.now()  + 1000 * 60 * 60 * 24,
       sub: 'authToken',
-      iss: 'edChat',
+      iss: 'ed-p1-Meeting-Planner',
       data: data
     }
     let tokenDetails = {

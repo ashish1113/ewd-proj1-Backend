@@ -72,12 +72,14 @@ module.exports.setRouter = (app) => {
     //for forgot password
     app.post(`${baseUrl}/forgot/password`, userController.forgotPassword);
 
-    app.post(`/reset/:token`,userController.resetPassword);
+    app.post(`${baseUrl}/reset/:token`,userController.resetPassword);
 //------------------------------------------from here event routes starrt-------------------------------------------------------------------------------
     //to create event
-    app.post(`${baseUrl}/event`,auth.isAuthorized,checkAdmin.isAdmin, eventController.eventCreator);
+    app.post(`${baseUrl}/create/event`,auth.isAuthorized,checkAdmin.isAdmin, eventController.eventCreator);
 
     app.get(`${baseUrl}/:email/details/allEvents`,auth.isAuthorized,eventController.getSingleUserEvents);
+
+    app.get(`${baseUrl}/read/:currentEventId/Details`,auth.isAuthorized,eventController.getSingleEventDetails);
 
     app.put(`${baseUrl}/:eventId/edit`, auth.isAuthorized,checkAdmin.isAuthorisedForEditAndDelete, eventController.editEvent);
 

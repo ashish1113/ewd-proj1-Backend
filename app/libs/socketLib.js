@@ -9,7 +9,7 @@ const tokenLib = require("./tokenLib.js");
 const mailLib =require("./mailingLib.js")
 const check = require("./checkLib.js");
 const response = require('./responseLib')
-
+const UserModel = mongoose.model('User')
 const EventModel = mongoose.model('Event')
 //const redisLib = require("./redisLib.js");
 //for time
@@ -22,10 +22,14 @@ const checkEvent = require('./checkEventLib')
 const cron = require("node-cron");
 //const redisLib = require("./redisLib.js");
 
+//let allOnlineUsers = []
 
 let setServer = (server) => {
 
-    let allOnlineUsers = []
+    let allNormalUserList =[]
+    var  allOnlineUsers =[]
+
+   // var socketIdTOSendMessage;
 
     let io = socketio.listen(server);
 
@@ -45,7 +49,7 @@ let setServer = (server) => {
 
             //console.log("set-user called")
 
-            //console.log("data passed to set-user event: ",data);
+            console.log("data passed to set-user event: ",data);
             tokenLib.verifyClaimWithoutSecret(data.authToken, (err, user) => {
                 if (err) {
                     socket.emit('auth-error', { status: 500, error: 'Please provide correct auth token' })
@@ -63,7 +67,7 @@ let setServer = (server) => {
                     console.log(`${fullName} is online`);
 
                     //let userExists=false;
-                    let userObj = { userName: currentUser.userName, fullName: fullName }
+                    let userObj = { userName: currentUser.userName, fullName: fullName ,socketId:data.userSocketId}
                     // if(allOnlineUsers.length>0){
                     //     for(let x in allOnlineUsers)
                     //     {
@@ -83,6 +87,7 @@ let setServer = (server) => {
                     // else{
                     //     allOnlineUsers.push(userObj)
                     // }
+                    //uppu ka
                     var removeIndex = allOnlineUsers.map(function (user) { return user['userName']; }).indexOf(userObj.userName);
                     if(removeIndex==-1){
                         allOnlineUsers.push(userObj);
@@ -141,10 +146,38 @@ let setServer = (server) => {
 
 
             })
-            // console.log("-----------------------------------------")
-            // console.log(allOnlineUsers);
+
+            UserModel.find({ typeOfUser: "Normal" }, function (err, res) {
+
+                if(err){
+
+                    console.log("Some error occurred while searching for allNormalList",err)
+                    
+                }
+                else if (check.isEmpty(res)){
+
+                    console.log("No normal user found while searching for allNormalList",res)
+
+                }else{
+                    allNormalUserList = [];
+                    for(let x in res)
+                    {
+                        let fullName = `${res[x].firstName} ${res[x].lastName}`
+                        let tempData ={"userName":res[x].userName,"email":res[x].email,"fullName":fullName}
+                        allNormalUserList.push(tempData);
+
+                    }
+                }
+
+            })
+
+            //console.log("allNormalUserList",allNormalUserList);
+          // myIo.emit('all-Normal-user-list',allNormalUserList );
+            
 
         }) // end of listening set-user event
+
+        myIo.emit('all-Normal-user-list',allNormalUserList );
 
         // cron.schedule("* * * * *", function () {
         //     EventModel.find(function (err, res) {
@@ -201,7 +234,9 @@ let setServer = (server) => {
                         
                                     // }, 2000)
 
-                                    myIo.to(`${userdata.userSocketId}`).emit('notification-send',  notificationObj);
+                                    // myIo.to(`${userdata.userSocketId}`).emit('notification-send',  notificationObj);
+
+                                    myIo.emit('notification-send',  notificationObj);
                                     
                                 }
 
@@ -271,10 +306,89 @@ let setServer = (server) => {
 
 
 
+        socket.on('send-notification-on-event-create', (userdata) => {
+            let notifiation_messageOncreate = `Hey you have a new Event`;
+            let socketIdTOSendMessage
+
+            for (let x in allOnlineUsers) {
+                if (allOnlineUsers[x].userName == userdata) {
+                    socketIdTOSendMessage = allOnlineUsers[x].socketId;
+
+                }
+
+
+            }
+
+            //socket.emit('notification-for-new-event')
+            myIo.to(`${socketIdTOSendMessage}`).emit('notification-for-new-event', notifiation_messageOncreate);
 
 
 
-    })
+
+        })
+
+
+        socket.on('send-notification-on-event-delete', (userdata) => {
+            let notifiation_messageOncreate = `Hey one of your events is deleted `;
+            let socketIdTOSendMessage
+
+            for (let x in allOnlineUsers) {
+                if (allOnlineUsers[x].userName == userdata) {
+                    socketIdTOSendMessage = allOnlineUsers[x].socketId;
+
+                }
+
+
+            }
+
+            //socket.emit('notification-for-new-event')
+            myIo.to(`${socketIdTOSendMessage}`).emit('notification-for-event-delete', notifiation_messageOncreate);
+
+
+
+
+        })
+
+
+        socket.on('send-notification-on-event-edit', (userdata) => {
+            let notifiation_messageOncreate = `Hey one of your events is edited `;
+            let socketIdTOSendMessage
+
+            for (let x in allOnlineUsers) {
+                if (allOnlineUsers[x].userName == userdata) {
+                    socketIdTOSendMessage = allOnlineUsers[x].socketId;
+
+                }
+
+
+            }
+
+            //socket.emit('notification-for-new-event')
+            myIo.to(`${socketIdTOSendMessage}`).emit('notification-for-event-edit', notifiation_messageOncreate);
+
+
+
+
+        })
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+})
 
 }
 module.exports = {

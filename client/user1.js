@@ -26,7 +26,9 @@ let chatSocket = () => {
     
 
     setInterval(function() {
-     
+
+      
+      console.log("emit funtion called for 1 min ")
       let userdata1 ={authToken:authToken,userSocketId:socket.id}
       socket.emit('notification1',userdata1);
 

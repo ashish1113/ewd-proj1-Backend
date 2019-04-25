@@ -18,7 +18,7 @@ const cron = require("node-cron");
 
 
 let eventCreator = (req, res) => {
-
+    console.log("create event request body: ",req.body);
     let validateEventInput = () => {
         return new Promise((resolve, reject) => {
             if (req.body.email) {
@@ -62,7 +62,7 @@ let eventCreator = (req, res) => {
             if(new Date(newEvent.startTime) > new Date()){
             newEvent.save((err, newEvent) => {
                 if (err) {
-                    console.log(err)
+                    console.log("error while saving event: ",err)
                     logger.error(err.message, 'EventController: createUser', 10)
                     let apiResponse = response.generate(true, 'Failed to create new event', 500, null)
                     reject(apiResponse)
@@ -170,6 +170,29 @@ let getSingleUserEvents = (req, res) => {
         })
 }// end get single user events
 
+let getSingleEventDetails = (req, res) => {
+    EventModel.findOne({ 'eventId': req.params.currentEventId })
+        .select('-__v -_id')
+        
+        .exec((err, result) => {
+            console.log("req--------------------------------------------",req.params.currentEventId)
+            if (err) {
+                console.log(err)
+                logger.error(err.message, 'Event Controller: getSingleEventDetails', 10)
+                let apiResponse = response.generate(true, 'Failed To Find Event Details of given eventid', 500, null)
+                res.send(apiResponse)
+            } else if (check.isEmpty(result)) {
+                logger.info('No Event-Details Found', 'Event Controller:getSingleEventDetails')
+                let apiResponse = response.generate(true, 'No Event Details Found ', 404, null)
+                
+                res.send(apiResponse)
+            } else {
+                let apiResponse = response.generate(false, 'Event Details Found', 200, result)
+                res.send(apiResponse)
+            }
+        })
+}// end get single user events
+
 let editEvent = (req, res) => {
 
     let options = req.body;
@@ -215,9 +238,10 @@ let editEvent = (req, res) => {
 
 let deleteEvent = (req, res) => {
 
+
     EventModel.findOneAndRemove({ 'eventId': req.params.eventId }).exec((err, result) => {
         if (err) {
-            console.log(err)
+            console.log("mongo",err)
             logger.error(err.message, 'Event Controller: deleteEvent', 10)
             let apiResponse = response.generate(true, 'Failed To delete event', 500, null)
             res.send(apiResponse)
@@ -227,24 +251,30 @@ let deleteEvent = (req, res) => {
             res.send(apiResponse)
         } else {
             let apiResponse = response.generate(false, 'Deleted the event successfully', 200, result)
-            eventEmitter.emit("event-deleted",req.params.eventId);
+            console.log("result-on-delete",result)
+            eventEmitter.emit("event-deleted",result.userEmail);
             res.send(apiResponse)
         }
     });// end event model find and remove
 
     eventEmitter.on("event-deleted",(data)=>
     {
-        EventModel.find({ 'eventId': data },(err,result)=>{
-            if(result)
-            {
-                let message = `an event with ${data} is deleted`
-                let emailToSendOnDeleting = result[0].userEmail;
-                mailingLib.sendMail(emailToSendOnDeleting,message)
+        // EventModel.find({ 'eventId': data },(err,result)=>{
+        //     if(result)
+        //     {
+        //         let message = `an event with ${data} is deleted`
+        //         let emailToSendOnDeleting = result[0].userEmail;
+        //         mailingLib.sendMail(emailToSendOnDeleting,message)
 
-            }
-        })
+        //     }
 
-    });
+
+    //     })
+               let message = `an event of  ${data} is deleted`
+               let emailToSendOnDeleting = data;
+               mailingLib.sendMail(emailToSendOnDeleting,message)
+
+     });
 
 }// end delete event
 
@@ -286,5 +316,6 @@ module.exports = {
     eventCreator: eventCreator,
     getSingleUserEvents: getSingleUserEvents,
     editEvent:editEvent,
-    deleteEvent: deleteEvent
+    deleteEvent: deleteEvent,
+    getSingleEventDetails : getSingleEventDetails
 }
