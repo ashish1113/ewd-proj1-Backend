@@ -159,7 +159,6 @@ let signUpFunction = (req, res) => {
                             } else {
                                 let newUserObj = newUser.toObject();
                                 resolve(newUserObj)
-                                console.log(newUserObj + "*************************************")
                             }
                         })
                     } else {
@@ -211,7 +210,6 @@ let loginFunction = (req, res) => {
                     } else {
                         /* prepare the message and the api response here */
                         logger.info('User Found', 'userController: findUser()', 10)
-                        //console.log(userDetails+"_____________++++++++++++_____________");
                         resolve(userDetails)
                     }
                 });
@@ -223,32 +221,11 @@ let loginFunction = (req, res) => {
         })
     }
     let validatePassword = (retrievedUserDetails) => {
-        console.log("------validatePassword------");
         console.log(retrievedUserDetails);
 
         return new Promise((resolve, reject) => {
 
-            //done to
-            /*passwordLib.comparePassword(req.body.password, retrievedUserDetails.password, (err, isMatch) => {
-                if (err) {
-                    console.log(err)
-                    logger.error(err.message, 'userController: validatePassword()', 10)
-                    let apiResponse = response.generate(true, 'Login Failed', 500, null)
-                    reject(apiResponse)
-                } else if (isMatch) {
-                    let retrievedUserDetailsObj = retrievedUserDetails.toObject()
-                    delete retrievedUserDetailsObj.password
-                    delete retrievedUserDetailsObj._id
-                    delete retrievedUserDetailsObj.__v
-                    delete retrievedUserDetailsObj.createdOn
-                    delete retrievedUserDetailsObj.modifiedOn
-                    resolve(retrievedUserDetailsObj)
-                } else {
-                    logger.info('Login Failed Due To Invalid Password', 'userController: validatePassword()', 10)
-                    let apiResponse = response.generate(true, 'Wrong Password.Login Failed', 400, null)
-                    reject(apiResponse)
-                }
-            })*/
+
 
             let checkToken = passwordLib.comparePasswordGenerated(req.body.password, retrievedUserDetails.password);
             if (checkToken === true) {
@@ -258,7 +235,6 @@ let loginFunction = (req, res) => {
                 delete retrievedUserDetailsObj.__v
                 delete retrievedUserDetailsObj.createdOn
                 delete retrievedUserDetailsObj.modifiedOn
-                console.log("_______________________-----------------------------------------------------------------")
                 console.log(retrievedUserDetailsObj);
                 resolve(retrievedUserDetailsObj)
             } else {
@@ -410,9 +386,7 @@ let forgotPassword = (req, res) => {
                     } else {
                         /* prepare the message and the api response here */
                         logger.info('User Found', 'userController: forgotpassword()->toCheckemail()', 10)
-                        //console.log(userDetails+"_____________++++++++++++_____________");
 
-                        // let retrievedUserDetailsObj = userDetails.toObject();
                         userDetails.resetPasswordToken = shortid.generate();
                         userDetails.resetPasswordExpires = Date.now() + 3600000;
                         userDetails.save((err, userDetails) => {
@@ -424,15 +398,14 @@ let forgotPassword = (req, res) => {
                             } else {
                                 let newUserObj = userDetails.toObject();
                                 let message = 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
-                                'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
-                                'http://' + req.headers.host + '/reset/' + newUserObj.resetPasswordToken + '\n\n' +
-                                'If you did not request this, please ignore this email and your password will remain unchanged.\n';
-                                let htmlMessage =  '<a href=http://localhost:4200/api/v1/users/' + 'reset/' + newUserObj.resetPasswordToken+'>'+"link"+'</a>'
-                                
-                                let info = mailer.sendMail1(newUserObj.email, message,htmlMessage);
-                               //main().catch(console.error);
+                                    'Please click on the following link, or paste this into your browser to complete the process:\n\n' +
+                                    'http://' + req.headers.host + '/reset/' + newUserObj.resetPasswordToken + '\n\n' +
+                                    'If you did not request this, please ignore this email and your password will remain unchanged.\n';
+                                let htmlMessage = '<a href=http://www.essindia.club/api/v1/users/' + 'reset/' + newUserObj.resetPasswordToken + '>' + "link" + '</a>'
+
+                                let info = mailer.sendMail1(newUserObj.email, message, htmlMessage);
+                                //main().catch(console.error);
                                 resolve(userDetails)
-                                console.log(newUserObj + "*************************************")
                             }
                         })
                         //resolve(retrievedUserDetailsObj);
@@ -458,26 +431,24 @@ let forgotPassword = (req, res) => {
     //
 }
 
-let resetPassword =(req,res) =>
-{
-    UserModel.findOne({ resetPasswordToken: req.params.token ,resetPasswordExpires : { $gt: Date.now() } } , (err, userDetails) => {
-        if(err)
-        {
+let resetPassword = (req, res) => {
+    UserModel.findOne({ resetPasswordToken: req.params.token, resetPasswordExpires: { $gt: Date.now() } }, (err, userDetails) => {
+        if (err) {
             console.log(err)
-                        logger.error('Failed To Retrieve User Data', 'userController: resetPassword', 10)
-                        /* generate the error message and the api response message here */
-                        let apiResponse = response.generate(true, 'Failed To Find given token- User Details', 500, null)
-                        res.send(apiResponse)
-        }else if (check.isEmpty(userDetails)) {
+            logger.error('Failed To Retrieve User Data', 'userController: resetPassword', 10)
+            /* generate the error message and the api response message here */
+            let apiResponse = response.generate(true, 'Failed To Find given token- User Details', 500, null)
+            res.send(apiResponse)
+        } else if (check.isEmpty(userDetails)) {
 
             logger.error('Password reset token is invalid or has expired.', 'userController: resetPassword', 7)
-                        let apiResponse = response.generate(true, 'Password reset token is invalid or has expired.', 408, null)
-                        res.send(apiResponse)
+            let apiResponse = response.generate(true, 'Password reset token is invalid or has expired.', 408, null)
+            res.send(apiResponse)
 
         } else {//ek event emit karna hai fronteend usope  listen karega aur ek component render karega
-            userDetails.password =  passwordLib.hashpasswordUsingMd5(req.body.newPassword);
-            userDetails.resetPasswordToken =undefined;
-            userDetails.resetPasswordExpires=undefined;
+            userDetails.password = passwordLib.hashpasswordUsingMd5(req.body.newPassword);
+            userDetails.resetPasswordToken = undefined;
+            userDetails.resetPasswordExpires = undefined;
 
             userDetails.save((err, userDetails) => {
                 if (err) {
@@ -488,7 +459,7 @@ let resetPassword =(req,res) =>
                 }
                 else {
 
-                    let message ='This is a confirmation that the password for your account ' + userDetails.email + ' has just been changed.\n';
+                    let message = 'This is a confirmation that the password for your account ' + userDetails.email + ' has just been changed.\n';
                     let info = mailer.sendMail(userDetails.email, message);
                     logger.info('mail sent successfully after reset-password.', 'userController: resetPassword', 7)
                     let apiResponse = response.generate(false, 'mail sent successfully after reset-password.', 200, null)
@@ -514,6 +485,6 @@ module.exports = {
     loginFunction: loginFunction,
     logout: logout,
     forgotPassword: forgotPassword,
-    resetPassword:resetPassword
+    resetPassword: resetPassword
 
 }// end exports

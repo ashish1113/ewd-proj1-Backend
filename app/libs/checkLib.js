@@ -12,37 +12,33 @@ let isEmpty = (value) => {
   }
 }
 
-function checkLastFiveChar1(str){
-  var str1="";
+function checkLastFiveChar1(str) {
+  var str1 = "";
 
-for(let i = str.length-5;i< str.length; i++){
-  str1= str1.concat(str[i]);
-   //document.write(str[i])
-  
+  for (let i = str.length - 5; i < str.length; i++) {
+    str1 = str1.concat(str[i]);
 
-}
- console.log(str1);
- //document.writeln("<br>");
- 
- if (str1 == "admin"){
- 
- console.log(str1+" is matched");
- //document.writeln("<br>");
- var res = str.slice(0,str.length-5);
- 
- console.log(res);
- return res;
- }else{
-   return str; 
- }
- 
- 
- 
+
+  }
+  console.log(str1);
+
+  if (str1 == "admin") {
+
+    console.log(str1 + " is matched");
+    var res = str.slice(0, str.length - 5);
+
+    console.log(res);
+    return res;
+  } else {
+    return str;
+  }
 
 
 
 
-//document.writeln("<br>");
+
+
+
 }
 
 /**

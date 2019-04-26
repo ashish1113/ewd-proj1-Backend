@@ -13,24 +13,23 @@ let convertToLocalTime = (time) => {
   return momenttz.tz(time, timeZone).format('LLLL')
 }
 
-let addHoursToDay = (date,hours) => {
-  return moment(date).add(hours,'h')
+let addHoursToDay = (date, hours) => {
+  return moment(date).add(hours, 'h')
 }
- //custom function
-let timeMinutesHourSetter = (hour,min) => {
-  let hourSetted = (hour*1.00) + (min/60);
+//custom function
+let timeMinutesHourSetter = (hour, min) => {
+  let hourSetted = (hour * 1.00) + (min / 60);
   return hourSetted;
 }                          //small
-let checkEndDateAndHour = (date1,date2) =>{
+let checkEndDateAndHour = (date1, date2) => {
   let dateA = moment(date1);
   let dateB = moment(date2);
-  console.log((dateB.diff(dateA, 'day'))+"_________________________________________________")
-  if((dateB.diff(dateA, 'day'))===0){
+
+  if ((dateB.diff(dateA, 'day')) === 0) {
     return 0;
-} else 
-{
-  return ((dateB.diff(dateA, 'day'))*24)
-}
+  } else {
+    return ((dateB.diff(dateA, 'day')) * 24)
+  }
 }
 
 
@@ -38,7 +37,7 @@ module.exports = {
   now: now,
   getLocalTime: getLocalTime,
   convertToLocalTime: convertToLocalTime,
-  addHoursToDay:addHoursToDay,
-  timeMinutesHourSetter:timeMinutesHourSetter,
-  checkEndDateAndHour:checkEndDateAndHour
+  addHoursToDay: addHoursToDay,
+  timeMinutesHourSetter: timeMinutesHourSetter,
+  checkEndDateAndHour: checkEndDateAndHour
 }

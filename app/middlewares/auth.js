@@ -11,12 +11,10 @@ const check = require('./../libs/checkLib')
 
 let isAuthorized = (req, res, next) => {
   
-   console.log("the authtoken passed in is authorized is->",req.query.authToken)
-   //req.header('authToken') || req.params.authToken || req.body.authToken ||
+   
 
   if (req.params.authToken || req.query.authToken || req.body.authToken || req.header('authToken')) {
     Auth.findOne({authToken: req.header('authToken') || req.params.authToken || req.body.authToken || req.query.authToken}, (err, authDetails) => {
-      //console.log("auth details after fetch:")
       if (err) {
         console.log(err)
         logger.error(err.message, 'AuthorizationMiddleware', 10)
@@ -24,12 +22,10 @@ let isAuthorized = (req, res, next) => {
         res.send(apiResponse)
       } else if (check.isEmpty(authDetails)) {
 
-        console.log("authdetails-are",authDetails)
         logger.error('No AuthorizationKey Is Present', 'AuthorizationMiddleware', 10)
         let apiResponse = responseLib.generate(true, 'Invalid Or Expired AuthorizationKey', 404, null)
         res.send(apiResponse)
       } else {
-        console.log(authDetails+"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
         token.verifyToken(authDetails.authToken,authDetails.tokenSecret,(err,decoded)=>{
 
             if(err){
@@ -42,7 +38,6 @@ let isAuthorized = (req, res, next) => {
               User.findOne({ userId: decoded.data.userId }, (err, authUserDetails) => {
 
                 if (err) {
-                  console.log(err);
                   logger.error(err.message, 'Authorization Middleware -> Checking For admin status', 10);
                   let apiResponse = responseLib.generate(true, 'Failed To Check User For Admin', 500, null);
                   res.send(apiResponse)

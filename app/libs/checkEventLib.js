@@ -10,25 +10,14 @@ let checkEventForTime = (eventArray) =>{
     let event1MinArray = [];
     for (let x in eventArray){
 
-        // console.log((moment().seconds(0).milliseconds(0).toISOString()))
-        // console.log("---------------------------------------------------")
-        // console.log(moment( eventArray[x].startTime).toISOString())
-        // console.log("-------------------------@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@--------------------------")
-        // console.log((moment( eventArray[x].startTime)).diff(moment().seconds(0).milliseconds(0)))
+       
         if ((((moment( eventArray[x].startTime).diff(moment().seconds(0).milliseconds(0)))))==1000*60)
          {    
             
 
-            //console.log((((moment(eventArray[x].startTime).diff(moment(time.now()))))/60000))
+            
             event1MinArray.push(eventArray[x])
-        //     if (Math.floor(((moment(eventArray[x].startTime).diff(moment(time.now()))))/60000) == 1)
-        //    {
-
-        //     console.log("---------------------------------------------------")
-        //         console.log((((moment(eventArray[x].startTime).diff(moment(time.now()))))/60000))
-        //        // console.log(eventArray[x])
-        //       event1MinArray.push(eventArray[x])
-        //     }
+       
 
         }
        
@@ -37,21 +26,20 @@ let checkEventForTime = (eventArray) =>{
 
 
     }
-    //console.log("main array")
-    //console.log(event1MinArray);
+    
     return event1MinArray;
 } 
 
 let compareEmail = (eventArr,userArr) =>{
 
-    let matchedEventArr = [];  // jiska user online hai. or uska event v hai.
+    let matchedEventArr = []; 
     for(let x in eventArr){
         for(let y in userArr){
             if((eventArr[x].userEmail) === (userArr[y].email)){
 
                 let eventData ={ eventDetails:eventArr[x] , userSoketId : userArr[y].userSocketId }
 
-                //eventArr[x].socketId =userArr[y].userSocketId
+                
 
                 matchedEventArr.push(eventData);
 
@@ -59,7 +47,7 @@ let compareEmail = (eventArr,userArr) =>{
             }
         }
     }
-    //console.log("eertfgyh",matchedEventArr)
+    
     return matchedEventArr;
 }
 

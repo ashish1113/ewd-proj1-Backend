@@ -27,11 +27,9 @@ const Event = new Schema({
   },
     startTime: {
     type: Date,
-    //default: time.now()
   },
   endTime: {
     type: Date,
-    //default: time.now()
   },
   eventTitle: {
     type:String,

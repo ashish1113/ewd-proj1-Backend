@@ -6,13 +6,12 @@ const events = require('events');
 const eventEmitter = new events.EventEmitter();
 
 const tokenLib = require("./tokenLib.js");
-const mailLib =require("./mailingLib.js")
+const mailLib = require("./mailingLib.js")
 const check = require("./checkLib.js");
 const response = require('./responseLib')
 const UserModel = mongoose.model('User')
 const EventModel = mongoose.model('Event')
-//const redisLib = require("./redisLib.js");
-//for time
+
 const moment = require('moment')
 const momenttz = require('moment-timezone')
 const timeZone = 'Asia/Calcutta'
@@ -20,16 +19,13 @@ const timeZone = 'Asia/Calcutta'
 const time = require('./timeLib');
 const checkEvent = require('./checkEventLib')
 const cron = require("node-cron");
-//const redisLib = require("./redisLib.js");
 
-//let allOnlineUsers = []
 
 let setServer = (server) => {
 
-    let allNormalUserList =[]
-    var  allOnlineUsers =[]
+    let allNormalUserList = []
+    var allOnlineUsers = []
 
-   // var socketIdTOSendMessage;
 
     let io = socketio.listen(server);
 
@@ -40,108 +36,41 @@ let setServer = (server) => {
 
 
 
-        //console.log("on connection--emitting verify user");
 
         socket.emit("verifyUser", "");
 
 
         socket.on('set-user', (data) => {
 
-            //console.log("set-user called")
 
-            console.log("data passed to set-user event: ",data);
+            console.log("data passed to set-user event: ", data);
             tokenLib.verifyClaimWithoutSecret(data.authToken, (err, user) => {
                 if (err) {
                     socket.emit('auth-error', { status: 500, error: 'Please provide correct auth token' })
                 }
                 else {
 
-                    //console.log("user is verified..setting details");
-                    console.log("user data post success auth token verification: ",user);
+                    console.log("user data post success auth token verification: ", user);
                     let currentUser = user.data;
                     // setting socket user id 
                     socket.userName = currentUser.userName
                     let fullName = `${currentUser.firstName} ${currentUser.lastName}`
-                    // let key = currentUser.userName
-                    // let value = fullName
+
                     console.log(`${fullName} is online`);
 
-                    //let userExists=false;
-                    let userObj = { userName: currentUser.userName, fullName: fullName ,socketId:data.userSocketId}
-                    // if(allOnlineUsers.length>0){
-                    //     for(let x in allOnlineUsers)
-                    //     {
-                    //         console.log("onlineuser listusername: ",allOnlineUsers[x].userName)
-                    //         console.log("userobj username: ",userObj.userName);
-                    //         if(allOnlineUsers[x].userName == userObj.userName)
-                    //         {
-                    //             console.log("I came here");
-                    //             break;
-                    //         }
-                    //         else{
-                    //             allOnlineUsers.push(userObj);
-                    //         }
-                    //     }
-                    // }
-                    
-                    // else{
-                    //     allOnlineUsers.push(userObj)
-                    // }
-                    //uppu ka
+                    let userObj = { userName: currentUser.userName, fullName: fullName, socketId: data.userSocketId }
+
                     var removeIndex = allOnlineUsers.map(function (user) { return user['userName']; }).indexOf(userObj.userName);
-                    if(removeIndex==-1){
+                    if (removeIndex == -1) {
                         allOnlineUsers.push(userObj);
                     }
-                      //allOnlineUsers.push(userObj)
-                     console.log("online user list after successful set-user: ",allOnlineUsers)
+                    console.log("online user list after successful set-user: ", allOnlineUsers)
 
-                     myIo.emit('online-user-list', allOnlineUsers);
-
+                    myIo.emit('online-user-list', allOnlineUsers);
 
 
-                    // let setUserOnline = redisLib.setANewOnlineUserInHash("onlineUsers", key, value, (err, result) => {
-                    //     if (err) {
-                    //         console.log(`some error occurred`)
-                    //     } else {
-                    //         // getting online users list.
-
-                    //         redisLib.getAllUsersInAHash('onlineUsers', (err, result) => {
-                    //             console.log(`--- inside getAllUsersInAHas function ---`)
-                    //             if (err) {
-                    //                 console.log(err)
-                    //             } else {
-                    //                 console.log("*********************************************")
-                    //                 console.log(result);
-                    //                 console.log("*********************************************")
-                    //                 // setting room name
-                    //                 socket.room = 'edChat'
-                    //                 // joining chat-group room.
-                    //                 socket.join(socket.room)
-                    //                 socket.to(socket.room).broadcast.emit('online-user-list', result);
-                    //                 // myIo.emit('online-user-list', result);
 
 
-                    //             }
-                    //         })
-                    //     }
-                    // })
-
-
-                    // let userObj = { userName: currentUser.userName, fullName: fullName }
-                    // allOnlineUsers.push(userObj)
-                    // console.log(allOnlineUsers)
-
-                    // // setting room name
-                    // //socket.room = 'MP-INTERFACE'
-                    // // joining chat-group room.
-                    // // socket.join(socket.room)
-                    // // socket.to(socket.room).broadcast.emit('online-user-list',allOnlineUsers);
-                    // // myIo.in(socket.room).emit('online-user-list', allOnlineUsers); 
-                    // myIo.emit('online-user-list', allOnlineUsers); //sending to all clients, include sender
-                    // //socket.emit('online-user-list', allOnlineUsers);
-
-
-                    //socket.to(socket.room).broadcast.emit('online-user-list',allOnlineUsers);
                 }
 
 
@@ -149,21 +78,20 @@ let setServer = (server) => {
 
             UserModel.find({ typeOfUser: "Normal" }, function (err, res) {
 
-                if(err){
+                if (err) {
 
-                    console.log("Some error occurred while searching for allNormalList",err)
-                    
+                    console.log("Some error occurred while searching for allNormalList", err)
+
                 }
-                else if (check.isEmpty(res)){
+                else if (check.isEmpty(res)) {
 
-                    console.log("No normal user found while searching for allNormalList",res)
+                    console.log("No normal user found while searching for allNormalList", res)
 
-                }else{
+                } else {
                     allNormalUserList = [];
-                    for(let x in res)
-                    {
+                    for (let x in res) {
                         let fullName = `${res[x].firstName} ${res[x].lastName}`
-                        let tempData ={"userName":res[x].userName,"email":res[x].email,"fullName":fullName}
+                        let tempData = { "userName": res[x].userName, "email": res[x].email, "fullName": fullName }
                         allNormalUserList.push(tempData);
 
                     }
@@ -171,38 +99,14 @@ let setServer = (server) => {
 
             })
 
-            //console.log("allNormalUserList",allNormalUserList);
-          // myIo.emit('all-Normal-user-list',allNormalUserList );
-            
+
+
 
         }) // end of listening set-user event
 
-        myIo.emit('all-Normal-user-list',allNormalUserList );
+        myIo.emit('all-Normal-user-list', allNormalUserList);
 
-        // cron.schedule("* * * * *", function () {
-        //     EventModel.find(function (err, res) {
 
-        //         if (res) {
-        //             let eventArray = checkEvent.checkEventForTime(res);
-        //             for (let x =0 ;x < eventArray.length ;x++ )
-        //             {
-        //                 let message = {
-        //                     eventDetails : eventArray[x]
-                            
-        //                 }
-        //                 let messageTobeSend = `this is an notification mail for an event coming soon for details refer to the following:
-        //                 ${message} `;
-        //                 let email = eventArray[x].userEmail;
-        //                 mailingLib.sendMail(email,messageTobeSend);
-        //             }
-
-        //         }
-        //         else {
-
-        //         }
-
-        //     });
-        // })
 
 
         socket.on('notification1', (userdata) => {
@@ -214,8 +118,7 @@ let setServer = (server) => {
                         if (res) {
                             //console.log("inside user:",res);
                             let eventArray = checkEvent.checkEventForTime(res);
-                            console.log("eventsArray are:", eventArray);
-                            console.log("===========================================================");
+
 
                             if (eventArray.length > 0) {
                                 for (let x = 0; x < eventArray.length; x++) {
@@ -225,19 +128,12 @@ let setServer = (server) => {
                                         eventToOccurAt: eventArray[x].startTime,
                                         userEmail: eventArray[x].userEmail,
                                         eventDetails: eventArray[x],
-                                        isSnooze :false
+                                        isSnooze: false
                                     }
 
-                                    // setTimeout(function () {
 
-                                    //     eventEmitter.emit('send-email', user.data);
-                        
-                                    // }, 2000)
+                                    myIo.emit('notification-send', notificationObj);
 
-                                    // myIo.to(`${userdata.userSocketId}`).emit('notification-send',  notificationObj);
-
-                                    myIo.emit('notification-send',  notificationObj);
-                                    
                                 }
 
                             }
@@ -259,41 +155,19 @@ let setServer = (server) => {
 
 
         socket.on('disconnect', () => {
-            // disconnect the user from socket
-            // remove the user from online list
-            // unsubscribe the user from his own channel
 
-            //console.log("user is disconnected");
-            // console.log(socket.connectorName);
-            console.log("socket username on disconnect: ",socket.userName);
+            console.log("socket username on disconnect: ", socket.userName);
 
-            if(socket.userName){
+            if (socket.userName) {
                 var removeIndex = allOnlineUsers.map(function (user) { return user['userName']; }).indexOf(socket.userName);
-                console.log("removed index: ",removeIndex);
+                console.log("removed index: ", removeIndex);
                 allOnlineUsers.splice(removeIndex, 1)
             }
-             
-            console.log("updated online user list on disconnect: ",allOnlineUsers)
+
+            console.log("updated online user list on disconnect: ", allOnlineUsers)
 
             myIo.emit('online-user-list', allOnlineUsers);
-            // //io.in(socket.room).emit('online-user-list', allOnlineUsers); 
-            // socket.to(socket.room).broadcast.emit('online-user-list',allOnlineUsers);
-            // socket.leave(socket.room)
 
-
-            // if (socket.userName) {
-            //     redisLib.deleteUserFromHash('onlineUsers', socket.userName)
-            //     redisLib.getAllUsersInAHash('onlineUsers', (err, result) => {
-            //         if (err) {
-            //             console.log(err)
-            //         } else {
-            //              socket.leave(socket.room)
-            //              socket.to(socket.room).broadcast.emit('online-user-list', result);
-            //             //myIo.emit('online-user-list', result);
-
-            //         }
-            //     })
-            // }
 
 
 
@@ -307,10 +181,10 @@ let setServer = (server) => {
 
 
         socket.on('send-notification-on-event-create', (userdata) => {
-           
+
             let notificationObjOnCreate = {
-                notifiation_message : `Hey you have a new Event Created By The Admin`,
-                userName:userdata
+                notifiation_message: `Hey you have a new Event Created By The Admin`,
+                userName: userdata
             }
             let socketIdTOSendMessage
 
@@ -323,10 +197,9 @@ let setServer = (server) => {
 
             }
 
-            //socket.emit('notification-for-new-event')
-            // myIo.to(`${socketIdTOSendMessage}`).emit('notification-for-new-event',  notificationObjOnCreate);
 
-            myIo.emit('notification-for-new-event',  notificationObjOnCreate);
+
+            myIo.emit('notification-for-new-event', notificationObjOnCreate);
 
 
 
@@ -335,8 +208,8 @@ let setServer = (server) => {
 
         socket.on('send-notification-on-event-delete', (userdata) => {
             let notificationObjOnDelete = {
-                notifiation_message : `Hey Oneof your event is deleted By The Admin`,
-                userName:userdata
+                notifiation_message: `Hey Oneof your event is deleted By The Admin`,
+                userName: userdata
             }
             let socketIdTOSendMessage
 
@@ -349,7 +222,6 @@ let setServer = (server) => {
 
             }
 
-            //socket.emit('notification-for-new-event')
             myIo.emit('notification-for-event-delete', notificationObjOnDelete);
 
 
@@ -360,8 +232,8 @@ let setServer = (server) => {
 
         socket.on('send-notification-on-event-edit', (userdata) => {
             let notificationObjOnEdit = {
-                notifiation_message : `Hey you have a new Event Edited By The Admin`,
-                userName:userdata
+                notifiation_message: `Hey you have a new Event Edited By The Admin`,
+                userName: userdata
             }
             let socketIdTOSendMessage
 
@@ -374,7 +246,6 @@ let setServer = (server) => {
 
             }
 
-            //socket.emit('notification-for-new-event')
             myIo.emit('notification-for-event-edit', notificationObjOnEdit);
 
 
@@ -392,14 +263,14 @@ let setServer = (server) => {
 
 
 
-    
 
 
 
 
 
 
-})
+
+    })
 
 }
 module.exports = {
