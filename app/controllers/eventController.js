@@ -214,9 +214,20 @@ let editEvent = (req, res) => {
     });// end event model update
 
     eventEmitter.on("event-edited",(data)=>
-    {    console.log(data);
+    {    console.log("data in edited event----------------",data);
         EventModel.find({ 'eventId': data },(err,result)=>{
-            if(result)
+              console.log("result in event -edited********8",result)
+
+              if (err) {
+                console.log("unable to send mail due to some error",err)
+                // logger.error(err.message, 'Event Controller:editEvent', 10)
+                // let apiResponse = response.generate(true, 'Failed To edit event details', 500, null)
+                // res.send(apiResponse)
+            }
+            else if (check.isEmpty(result)) {
+               console.log("Details not found to send mail ",result)
+            }
+            else
             {
                 let message = `some modification is done with your event with following Detalis :-
                 ${result}`

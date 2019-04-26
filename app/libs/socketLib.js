@@ -307,7 +307,11 @@ let setServer = (server) => {
 
 
         socket.on('send-notification-on-event-create', (userdata) => {
-            let notifiation_messageOncreate = `Hey you have a new Event`;
+           
+            let notificationObjOnCreate = {
+                notifiation_message : `Hey you have a new Event Created By The Admin`,
+                userName:userdata
+            }
             let socketIdTOSendMessage
 
             for (let x in allOnlineUsers) {
@@ -320,8 +324,9 @@ let setServer = (server) => {
             }
 
             //socket.emit('notification-for-new-event')
-            myIo.to(`${socketIdTOSendMessage}`).emit('notification-for-new-event', notifiation_messageOncreate);
+            // myIo.to(`${socketIdTOSendMessage}`).emit('notification-for-new-event',  notificationObjOnCreate);
 
+            myIo.emit('notification-for-new-event',  notificationObjOnCreate);
 
 
 
@@ -329,7 +334,10 @@ let setServer = (server) => {
 
 
         socket.on('send-notification-on-event-delete', (userdata) => {
-            let notifiation_messageOncreate = `Hey one of your events is deleted `;
+            let notificationObjOnDelete = {
+                notifiation_message : `Hey Oneof your event is deleted By The Admin`,
+                userName:userdata
+            }
             let socketIdTOSendMessage
 
             for (let x in allOnlineUsers) {
@@ -342,7 +350,7 @@ let setServer = (server) => {
             }
 
             //socket.emit('notification-for-new-event')
-            myIo.to(`${socketIdTOSendMessage}`).emit('notification-for-event-delete', notifiation_messageOncreate);
+            myIo.emit('notification-for-event-delete', notificationObjOnDelete);
 
 
 
@@ -351,7 +359,10 @@ let setServer = (server) => {
 
 
         socket.on('send-notification-on-event-edit', (userdata) => {
-            let notifiation_messageOncreate = `Hey one of your events is edited `;
+            let notificationObjOnEdit = {
+                notifiation_message : `Hey you have a new Event Edited By The Admin`,
+                userName:userdata
+            }
             let socketIdTOSendMessage
 
             for (let x in allOnlineUsers) {
@@ -364,7 +375,7 @@ let setServer = (server) => {
             }
 
             //socket.emit('notification-for-new-event')
-            myIo.to(`${socketIdTOSendMessage}`).emit('notification-for-event-edit', notifiation_messageOncreate);
+            myIo.emit('notification-for-event-edit', notificationObjOnEdit);
 
 
 
